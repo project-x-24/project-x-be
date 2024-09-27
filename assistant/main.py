@@ -114,7 +114,8 @@ class Agent():
             transcription=transcriptionOptions,
         )
 
-        def user_started_speaking_callback( answer_message):
+        def user_started_speaking_callback(answer_message):
+            self.answer_from_text(answer_message)
             self.lastQuestion = answer_message.content
             try:
                 # Regular expression pattern to capture Event Name and Date
@@ -161,7 +162,8 @@ class Agent():
             data = {     
                 "agent":self.agentType,
                 "question":self.lastQuestion,
-                "answer":txt,}
+                "answer":txt
+            }
             try:
                 response = requests.post(api_url, data=json.dumps(data), headers=headers)
                 if response.status_code == 200:
