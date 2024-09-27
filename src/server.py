@@ -1,6 +1,7 @@
 import falcon
 from src.common.health_resource import HealthResource
 from src.common.context_resource import ContextResource
+from src.common.todo_resource import ToDoResource
 from src.common.file_resource import FileResource
 from src.common.data_models.bind_models import connect_and_bind_models
 from src.common.middleware.db_connection_middleware import DBConnectionMiddleware
@@ -34,6 +35,7 @@ def create_app(test_mode=False):
     _app.add_route("/api/health", HealthResource())
     _app.add_route("/api/files", FileResource())
     _app.add_route("/api/context", ContextResource())
+    _app.add_route("/api/todo", ToDoResource())
 
     return _app
 

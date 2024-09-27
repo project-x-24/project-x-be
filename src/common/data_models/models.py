@@ -81,3 +81,14 @@ class Context(BaseModel):
 
     class Meta:
         table_name = "context"
+
+class ToDoList(BaseModel):
+    id = IntegerField()
+    event = CharField()
+    date = CharField()
+    created_at = DateTimeField()
+    updated_at = DateTimeField()
+    deleted_at = DateTimeField(null=True)
+
+    class Meta:
+        table_name = "to_do_list"
