@@ -72,7 +72,7 @@ class BaseModel(Model):
 class Context(BaseModel):
     id = IntegerField()
     name = CharField()
-    agent = IntegerField()
+    agent = CharField()
     question = CharField()
     answer = CharField()
     created_at = DateTimeField()
