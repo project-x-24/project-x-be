@@ -97,6 +97,16 @@ async def entrypoint(ctx: JobContext):
                 date = match.group(2)  # Second captured group is the date
                 print(f"Event Name: {event_name}")
                 print(f"Date: {date}")
+
+                try:
+                    data = { "event": event_name, "date": date }
+                    response = requests.post("http://0.0.0.0:3000/api/todo", data=json.dumps(data), headers={"Content-Type": "application/json"})
+                    if response.status_code == 200:
+                        print("ToDo successfully sent to the API.")
+                    else:
+                        print(f"Failed to add To Do. Status code: {response.status_code}")
+                except Exception as error:
+                    print("An exception occurred", error)
             else:
                 print("No match found.")
         except Exception as e:
