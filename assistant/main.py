@@ -57,7 +57,6 @@ class Agent:
 
         print("BASE PROMPT", self.base_prompt)
         token = GetToken("asj-room")
-        print("PlayGround Token:", token)
 
     def __resolve_voice(self):
         if self.agentType == "SELF_AGENT":
@@ -252,11 +251,17 @@ def GetToken(roomName: str):
             )
         )
     )
-    return token.to_jwt()
+    URL = os.environ.get("LIVEKIT_URL")
+    token =token.to_jwt()
+    print("******************")
+    print("PlayGround Token:", token)
+    print("URL:", URL)
+    print("******************")
+    return token
 
 
 if __name__ == "__main__":
     AGENT_TYPE = os.environ.get("AGENT_TYPE")  # SELF_AGENT, THERAPIST, BEST_FRIEND, GAME_AGENT, ASSISTANT_AGENT
-    agent = Agent(AGENT_TYPE)
     print("Agent Type", AGENT_TYPE)
+    agent = Agent(AGENT_TYPE)
     cli.run_app(WorkerOptions(entrypoint_fnc=agent.entrypoint))
