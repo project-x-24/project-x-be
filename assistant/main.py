@@ -17,17 +17,25 @@ from assistant.base_prompts import base_prompts
 load_dotenv("../.env")
 
 
-class Agent():
+class Agent:
     # This function is the entrypoint for the agent.
-    agentType = ''
-    lastQuestion = ''
-    base_prompt = ''
+    agentType = ""
+    lastQuestion = ""
+    base_prompt = ""
+
     def __init__(self, agentType: str):
         self.agentType = agentType
-        
+        self.delay = 0.5
+        if self.agentType == "ASSISTANT_AGENT":
+            self.delay = 5.0
+        self.__resolve_voice()
+
         try:
-            response = requests.get(f"http://localhost:3000/api/context?agent={self.agentType}",headers={"Content-Type": "application/json"})
-            resp= response.json() 
+            response = requests.get(
+                f"http://localhost:3000/api/context?agent={self.agentType}",
+                headers={"Content-Type": "application/json"},
+            )
+            resp = response.json()
             olderChats = []
             for item in resp["items"]:
                 # data = { "agent": item["agent"], "question": item["question"], "answer": item["answer"] }
@@ -45,10 +53,67 @@ class Agent():
                 {base_prompts[self.agentType]}            
             """
 
-        print('BASE PROMPT', self.base_prompt)
+        print("BASE PROMPT", self.base_prompt)
         token = GetToken("my-room")
         print("PlayGround Token:", token)
-    async def entrypoint(self, ctx: JobContext):      
+
+    def __resolve_voice(self):
+        if self.agentType == "SELF_AGENT":
+            self.voice = Voice(
+                id="aWHwsR3lAJpw5qdEam15",
+                name="Kurian",
+                category="premade",
+                settings=VoiceSettings(
+                    stability=1.0,
+                    similarity_boost=1.0,
+                    style=0.0,
+                    use_speaker_boost=True,
+                ),
+            )
+        elif self.agentType == "THERAPIST":
+            self.voice = Voice(
+                id="JzF1s9wpQvxVdZS3JSwZ",
+                name="Shruti",
+                category="premade",
+            )
+        elif self.agentType == "BEST_FRIEND":
+            self.voice = Voice(
+                id="ZJpPHx76HGgYYHKJJD0d",
+                name="Hari",
+                category="premade",
+                settings=VoiceSettings(
+                    stability=0.10,
+                    similarity_boost=0.65,
+                    style=0.0,
+                    use_speaker_boost=True,
+                ),
+            )
+        elif self.agentType == "GAME_AGENT":
+            self.voice = Voice(
+                id="hM5T22C2VeL3rbIKUecn",
+                name="Ajai",
+                category="premade",
+            )
+        elif self.agentType == "ASSISTANT_AGENT":
+            self.voice = Voice(
+                id="aWHwsR3lAJpw5qdEam15",
+                name="Kurian",
+                category="premade",
+                settings=VoiceSettings(
+                    stability=1.0,
+                    similarity_boost=1.0,
+                    style=0.0,
+                    use_speaker_boost=True,
+                ),
+            )
+        else:
+            self.voice = Voice(
+                id="aWHwsR3lAJpw5qdEam15",
+                name="Kurian",
+                category="premade",
+            )
+
+    async def entrypoint(self, ctx: JobContext):
         # Create an initial chat context with a system prompt
 
         initial_ctx = llm.ChatContext().append(role="system", text=self.base_prompt)
@@ -62,34 +127,6 @@ class Agent():
         # VoiceAssistant is a class that creates a full conversational AI agent.
         # See https://github.com/livekit/agents/tree/main/livekit-agents/livekit/agents/voice_assistant
         # for details on how it works.
-
-        AJAI_VOICE = Voice(
-            id="hM5T22C2VeL3rbIKUecn",
-            name="Ajai",
-            category="premade",
-            # settings=VoiceSettings(
-            #     stability=0.71, similarity_boost=0.5, style=0.0, use_speaker_boost=True
-            # ),
-        )
-
-        # ZasyRy4wU4dDh3cG8ju4
-        HARI_VOICE = Voice(
-            id="ZJpPHx76HGgYYHKJJD0d",
-            name="Hari",
-            category="premade",
-            settings=VoiceSettings(
-                stability=0.10,
-                similarity_boost=0.65,
-                style=0.0,
-                use_speaker_boost=True,
-            ),
-        )
-
-        KURIAN_VOICE = Voice(
-            id="aWHwsR3lAJpw5qdEam15",
-            name="Kurian",
-            category="premade",
-        )
 
         def before_lmm_cb(assistant, chat_ctx):
             return assistant.llm.chat(
@@ -107,10 +144,10 @@ class Agent():
             stt=deepgram.STT(),
             llm=openai.LLM(),
             # tts=openai.TTS(),
-            tts=elevenlabs.TTS(voice=KURIAN_VOICE),
+            tts=elevenlabs.TTS(voice=self.voice),
             chat_ctx=initial_ctx,
             before_llm_cb=before_lmm_cb,
-            min_endpointing_delay=3,
+            min_endpointing_delay=self.delay,
             transcription=transcriptionOptions,
         )
 
@@ -131,8 +168,12 @@ class Agent():
                     print(f"Date: {date}")
 
                     try:
-                        data = { "event": event_name, "date": date }
-                        response = requests.post("http://0.0.0.0:3000/api/todo", data=json.dumps(data), headers={"Content-Type": "application/json"})
+                        data = {"event": event_name, "date": date}
+                        response = requests.post(
+                            "http://0.0.0.0:3000/api/todo",
+                            data=json.dumps(data),
+                            headers={"Content-Type": "application/json"},
+                        )
                         if response.status_code == 200:
                             print("ToDo successfully sent to the API.")
                         else:
@@ -171,7 +212,7 @@ class Agent():
                 else:
                     print(f"Failed to send chat history. Status code: {response.status_code}")
             except Exception as error:
-                print("An exception occurred", error)    
+                print("An exception occurred", error)
             chat_ctx = assistant.chat_ctx.copy()
             chat_ctx.append(role="user", text=txt)
             stream = llm_plugin.chat(chat_ctx=chat_ctx)
@@ -206,7 +247,7 @@ def GetToken(roomName: str):
 
 
 if __name__ == "__main__":
-    AGENT_TYPE = os.environ.get("AGENT_TYPE") # SELF_AGENT, THERAPIST, BEST_FRIEND, GAME_AGENT
+    AGENT_TYPE = os.environ.get("AGENT_TYPE")  # SELF_AGENT, THERAPIST, BEST_FRIEND, GAME_AGENT, ASSISTANT_AGENT
     agent = Agent(AGENT_TYPE)
     print("Agent Type", AGENT_TYPE)
     cli.run_app(WorkerOptions(entrypoint_fnc=agent.entrypoint))
