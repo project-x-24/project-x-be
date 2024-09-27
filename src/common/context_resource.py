@@ -12,7 +12,7 @@ class ContextResource(object):
             agent = body.get("agent")
             question = body.get("question")
             answer = body.get("answer")
-
+            print("request body",body)
             context = Context.create(agent=agent, question=question, answer=answer)
             context.save()
 

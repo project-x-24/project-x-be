@@ -11,6 +11,7 @@ from livekit.plugins.elevenlabs import Voice, VoiceSettings
 from livekit import rtc
 from dotenv import load_dotenv
 from livekit import api
+import requests
 
 from assistant.base_prompts import base_prompts
 
@@ -25,10 +26,10 @@ async def entrypoint(ctx: JobContext):
         Chat history
         <chat history here>
     """
-    global chat_history
-    chat_history = []
+    global lastQuestion
+    lastQuestion = ""
     # Create an initial chat context with a system prompt
-    token = GetToken("asj-room")
+    token = GetToken("my-room")
     print("PlayGround Token:", token)
     initial_ctx = llm.ChatContext().append(role="system", text=base_prompt)
 
@@ -65,8 +66,6 @@ async def entrypoint(ctx: JobContext):
     )
 
     def before_lmm_cb(assistant, chat_ctx):
-        global chat_history
-        chat_history = [message for message in chat_ctx.messages]
         return assistant.llm.chat(
             chat_ctx=chat_ctx,
             fnc_ctx=assistant.fnc_ctx,
@@ -84,8 +83,24 @@ async def entrypoint(ctx: JobContext):
     )
 
     def user_started_speaking_callback(answer_message):
-        global chat_history
-        chat_history.append(answer_message)
+        print("User started speaking")
+        api_url = "http://0.0.0.0:3000/api/context"
+        headers = {'Content-Type': 'application/json'}
+        global lastQuestion
+        data = {     
+            "agent":1,
+            "question":lastQuestion,
+            "answer":answer_message.content,}
+        try:
+            response = requests.post(api_url, data=json.dumps(data), headers=headers)
+            if response.status_code == 200:
+                print("Chat history successfully sent to the API.")
+            else:
+               print(f"Failed to send chat history. Status code: {response.status_code}")
+        except Exception as error:
+            print("An exception occurred", error)    
+        
+
         # Save here - Bobby
 
     assistant.on("agent_speech_committed", user_started_speaking_callback)
@@ -97,6 +112,8 @@ async def entrypoint(ctx: JobContext):
     chat = rtc.ChatManager(ctx.room)
 
     async def answer_from_text(txt: str):
+        global lastQuestion
+        lastQuestion = txt
         chat_ctx = assistant.chat_ctx.copy()
         chat_ctx.append(role="user", text=txt)
         stream = llm_plugin.chat(chat_ctx=chat_ctx)
