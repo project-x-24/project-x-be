@@ -20,3 +20,7 @@ $ poetry export --without-hashes --format=requirements.txt > requirements.txt
 $ poetry add "new_package_name"
 $ poetry lock --no-update
 ```
+# Start Server
+```bash
+$ gunicorn --reload -b 0.0.0.0:3000 src.server:app
+```
