@@ -24,6 +24,8 @@ class Agent:
     base_prompt = ""
 
     def __init__(self, agentType: str):
+        self.question = None
+        self.chat_history = []
         self.agentType = agentType
         self.delay = 0.5
         if self.agentType == "ASSISTANT_AGENT":
@@ -54,7 +56,7 @@ class Agent:
             """
 
         print("BASE PROMPT", self.base_prompt)
-        token = GetToken("my-room")
+        token = GetToken("asj-room")
         print("PlayGround Token:", token)
 
     def __resolve_voice(self):
@@ -129,6 +131,8 @@ class Agent:
         # for details on how it works.
 
         def before_lmm_cb(assistant, chat_ctx):
+            if chat_ctx is not None:
+                self.chat_history = [message for message in chat_ctx.messages]
             return assistant.llm.chat(
                 chat_ctx=chat_ctx,
                 fnc_ctx=assistant.fnc_ctx,
@@ -152,13 +156,18 @@ class Agent:
         )
 
         def user_started_speaking_callback(answer_message):
-            self.lastQuestion = answer_message.content
-            api_url = "http://0.0.0.0:3000/api/context"
-            headers = {'Content-Type': 'application/json'}
-            data = {     
-                "agent":self.agentType,
-                "question":self.lastQuestion
+            if self.question is None:
+                if len(self.chat_history) > 0:
+                    self.question = self.chat_history[-1].content
+            answer = answer_message.content
+            data = {
+                "agent": self.agentType,
+                "question": self.question,
+                "answer": answer,
             }
+            print("Data in user started speech event: ", data)
+            api_url = "http://0.0.0.0:3000/api/context"
+            headers = {"Content-Type": "application/json"}
             try:
                 response = requests.post(api_url, data=json.dumps(data), headers=headers)
                 if response.status_code == 200:
@@ -166,7 +175,7 @@ class Agent:
                 else:
                     print(f"Failed to send chat history. Status code: {response.status_code}")
             except Exception as e:
-                print("Error in extracting Event Name and Date")
+                print(f"Error in calling chat history API, Error: {e}")
 
             try:
                 # Regular expression pattern to capture Event Name and Date
@@ -212,21 +221,7 @@ class Agent:
         chat = rtc.ChatManager(ctx.room)
 
         async def answer_from_text(self, txt: str):
-            api_url = "http://0.0.0.0:3000/api/context"
-            headers = {'Content-Type': 'application/json'}
-            data = {     
-                "agent":self.agentType,
-                "question":self.lastQuestion,
-                "answer":txt
-            }
-            try:
-                response = requests.post(api_url, data=json.dumps(data), headers=headers)
-                if response.status_code == 200:
-                    print("Chat history successfully sent to the API.")
-                else:
-                    print(f"Failed to send chat history. Status code: {response.status_code}")
-            except Exception as error:
-                print("An exception occurred", error)
+            self.question = txt
             chat_ctx = assistant.chat_ctx.copy()
             chat_ctx.append(role="user", text=txt)
             stream = llm_plugin.chat(chat_ctx=chat_ctx)
