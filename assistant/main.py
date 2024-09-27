@@ -25,8 +25,10 @@ async def entrypoint(ctx: JobContext):
         Chat history
         <chat history here>
     """
+    global chat_history
+    chat_history = []
     # Create an initial chat context with a system prompt
-    token = GetToken("my-room")
+    token = GetToken("asj-room")
     print("PlayGround Token:", token)
     initial_ctx = llm.ChatContext().append(role="system", text=base_prompt)
 
@@ -63,12 +65,8 @@ async def entrypoint(ctx: JobContext):
     )
 
     def before_lmm_cb(assistant, chat_ctx):
-        # chat_ctx.append(
-        #     role="system",
-        #     text=(
-        #         # add additional context here
-        #     ),
-        # )
+        global chat_history
+        chat_history = [message for message in chat_ctx.messages]
         return assistant.llm.chat(
             chat_ctx=chat_ctx,
             fnc_ctx=assistant.fnc_ctx,
@@ -81,9 +79,16 @@ async def entrypoint(ctx: JobContext):
         # tts=openai.TTS(),
         tts=elevenlabs.TTS(voice=HARI_VOICE),
         chat_ctx=initial_ctx,
-        # before_llm_cb=before_lmm_cb,
+        before_llm_cb=before_lmm_cb,
+        min_endpointing_delay=3,
     )
 
+    def user_started_speaking_callback(answer_message):
+        global chat_history
+        chat_history.append(answer_message)
+        # Save here - Bobby
+
+    assistant.on("agent_speech_committed", user_started_speaking_callback)
     # Start the voice assistant with the LiveKit room
     assistant.start(ctx.room)
 
