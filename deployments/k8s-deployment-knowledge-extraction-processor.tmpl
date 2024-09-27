@@ -1,0 +1,102 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: knowledge-extraction-processor
+spec:
+  selector:
+    matchLabels:
+      component: knowledge-extraction-processor
+  replicas: ${POD_REPLICAS_KNOWLEDGE_EXTRACTION_PROCESSOR}
+  template:
+    metadata:
+      labels:
+        component: knowledge-extraction-processor
+    spec:
+      volumes:
+        - name: knowledge-extraction-processor-pv
+          persistentVolumeClaim:
+            claimName: export-pvc
+      containers:
+      - name: knowledge-extraction-processor
+        image: "$DOCKER_REGISTRY/$NAMESPACE/$SERVICE_NAME:$TAG"
+        imagePullPolicy: Always
+        volumeMounts:
+        - name: knowledge-extraction-processor-pv
+          mountPath: /bdnai-knowledge-extraction/resources
+        command: ["poetry", "run", "python3", "-m", "src.worker", "-w", "KNOWLEDGE_EXTRACTION_PROCESSOR"]
+        resources:
+          requests:
+            cpu: 1000m
+            memory: 2Gi
+          limits:
+            cpu: 1000m
+            memory: 3Gi
+        env:
+          - name: DB_HOST
+            value: "${DB_HOST}"
+          - name: DB_PORT
+            value: "${DB_PORT}"
+          - name: DB_USERNAME
+            value: "${DB_USERNAME}"
+          - name: DB_PASSWORD
+            value: "${DB_PASSWORD}"
+          - name: USE_DB_POOL
+            value: "false"
+          - name: GOOGLE_PROJECT
+            value: "${GOOGLE_PROJECT}"
+          - name: GOOGLE_PROJECT_ID
+            value: "${GOOGLE_PROJECT_ID}"
+          - name: GOOGLE_DOCAI_PROCESSOR_ID
+            value: "${GOOGLE_DOCAI_PROCESSOR_ID}"
+          - name: GOOGLE_DOCAI_REGION
+            value: "${GOOGLE_DOCAI_REGION}"
+          - name: SOKETI_HOST
+            value: "${SOKETI_HOST}"
+          - name: SOKETI_APP_ID
+            value: "${SOKETI_APP_ID}"
+          - name: SOKETI_KEY
+            value: "${SOKETI_KEY}"
+          - name: SOKETI_SECRET
+            value: "${SOKETI_SECRET}"
+          - name: SOKETI_CLUSTER
+            value: "${SOKETI_CLUSTER}"
+          - name: SOKETI_ENABLE_SSL
+            value: "${SOKETI_ENABLE_SSL}"
+          - name: REDIS_HOST
+            value: "${REDIS_HOST}"
+          - name: REDIS_PORT
+            value: "${REDIS_PORT}"
+          - name: REDIS_DB
+            value: "${REDIS_DB}"
+          - name: JWT_SECRET
+            value: "${JWT_SECRET}"
+          - name: RABBIT_URL
+            value: "${RABBIT_URL}"
+          - name: OPENAI_API_KEY
+            value: "${OPENAI_API_KEY}"
+          - name: API_SERVER_URL
+            value: "${API_SERVER_URL}"
+          - name: GOOGLE_APPLICATION_CREDENTIALS
+            value: "${IDEA_BUILDER_GOOGLE_APPLICATION_CREDENTIALS}"
+          - name: LOCATION
+            value: "${LOCATION}"
+          - name: VERTEX_VECTOR_STORE_REGION
+            value: "${VERTEX_VECTOR_STORE_REGION}"
+          - name: VERTEX_VECTOR_STORE_ENDPOINT_ID
+            value: "${VERTEX_VECTOR_STORE_ENDPOINT_ID}"
+          - name: VERTEX_VECTOR_STORE_INDEX_ID
+            value: "${VERTEX_VECTOR_STORE_INDEX_ID}"
+          - name: VERTEX_VECTOR_STORE_GCS_BUCKET_NAME
+            value: "${VERTEX_VECTOR_STORE_GCS_BUCKET_NAME}"
+          - name: BIND_TO_DELAY_EXCHANGE
+            value: "false"
+          - name: R2_ENABLED
+            value: "${R2_ENABLED}"
+          - name: R2_ENDPOINT_URL
+            value: "${R2_ENDPOINT_URL}"
+          - name: R2_ACCESS_KEY_ID
+            value: "${R2_ACCESS_KEY_ID}"
+          - name: R2_SECRET_ACCESS_KEY
+            value: "${R2_SECRET_ACCESS_KEY}"
+          - name: R2_REGION
+            value: "${R2_REGION}"
