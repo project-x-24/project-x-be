@@ -13,7 +13,7 @@ class ContextResource(object):
             agent = body.get("agent")
             question = body.get("question")
             answer = body.get("answer")
-
+            print("received context insert api request", body)
             context = Context.create(name=name, agent=agent, question=question, answer=answer)
             context.save()
 
@@ -27,7 +27,7 @@ class ContextResource(object):
             # Handle unexpected errors
             resp.status = falcon.HTTP_500
             resp.text = json.dumps({"error": str(e)})
-
+            print("Error in context insert api", e)
     def on_get(self, req, resp):
         try:
             agent = req.get_param("agent")
