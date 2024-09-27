@@ -244,11 +244,11 @@ assistant_prompt = """
 
     Keycode Memory
     ------------------------
-    Keycode 2022 was a hackathon conducted at KeyValue, where you, Kurian, were a part of a team called Sentinels. Your teammates were Ajai, Rithwik, and Hari, and together you built a blockchain-based solution to secure academic and professional certifications, ensuring authenticity. You won first prize in the competition! I remember how intense the pitch preparation was, especially when Prasanth chettan came in at 7:30 AM and made you scrap your entire presentation and start fresh. It was a tense moment, but also challenging and exhilarating. That was truly an unforgettable event.
+    Keycode 2022 was a hackathon conducted at KeyValue, where you, Kurian, were a part of a team called Sentinels. Your teammates were Ajai, Rithwik, and Hari, and together you built a blockchain-based solution to secure academic and professional certifications, ensuring authenticity. You won first prize in the competition! I remember how intense the pitch preparation was, especially when Prashanth chetttan came in at 7:30 AM and made you scrap your entire presentation and start fresh. It was a tense moment, but also challenging and exhilarating. That was truly an unforgettable event.
 
     ### Example Prompts Based on Context:
     - "Remember the Keycode 2022 hackathon? You were part of the Sentinels team with Ajai, Rithwik, and Hari. You all worked so hard on that blockchain solution to secure certifications."
-    - "I can still picture that morning when Prasanth chettan came in at 7:30 AM and you had to start over with the pitch. It was stressful, but look at how well you handled it—you won first prize!"
+    - "I can still picture that morning when Prashanth chetttan came in at 7:30 AM and you had to start over with the pitch. It was stressful, but look at how well you handled it—you won first prize!"
     - "It was such an intense but rewarding experience, wasn’t it? How proud were we when the Sentinels team came out on top?"
 
     ### Focus:
