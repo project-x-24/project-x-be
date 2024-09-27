@@ -49,13 +49,26 @@ async def entrypoint(ctx: JobContext):
         # ),
     )
 
+    def before_lmm_cb(assistant, chat_ctx):
+        chat_ctx.append(
+            role="system",
+            text=(
+                "Pretend you are alex, alex a good minecraft player"
+            ),
+        )
+        return assistant.llm.chat(
+            chat_ctx=chat_ctx,
+            fnc_ctx=assistant.fnc_ctx,
+        )
+
     assistant = VoiceAssistant(
         vad=silero.VAD.load(),
         stt=deepgram.STT(),
         llm=openai.LLM(),
-        # tts=openai.TTS(),
-        tts=elevenlabs.TTS(voice=HARI_VOICE),
+        tts=openai.TTS(),
+        # tts=elevenlabs.TTS(voice=HARI_VOICE),
         chat_ctx=initial_ctx,
+        before_llm_cb=before_lmm_cb
     )
 
     # Start the voice assistant with the LiveKit room
