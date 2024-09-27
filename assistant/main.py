@@ -26,7 +26,7 @@ class Agent():
         self.agentType = agentType
         
         try:
-            response = requests.get("http://0.0.0.0:3000/api/context?agent={self.agentType}",headers={"Content-Type": "application/json"})
+            response = requests.get(f"http://localhost:3000/api/context?agent={self.agentType}",headers={"Content-Type": "application/json"})
             resp= response.json() 
             olderChats = []
             for item in resp["items"]:
@@ -44,6 +44,8 @@ class Agent():
             self.base_prompt = f"""
                 {base_prompts[self.agentType]}            
             """
+
+        print('BASE PROMPT', self.base_prompt)
         token = GetToken("my-room")
         print("PlayGround Token:", token)
     async def entrypoint(self, ctx: JobContext):      
