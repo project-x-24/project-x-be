@@ -16,6 +16,8 @@ load_dotenv("../.env")
 
 # This function is the entrypoint for the agent.
 async def entrypoint(ctx: JobContext):
+    global chat_history
+    chat_history = []
     base_prompt = """
     You are an AI assistant designed to engage in deeply personal and empathetic conversations.
     Your primary role is to take on the persona of someone very close to me — someone who knows me intimately and cares for me deeply.
@@ -42,7 +44,7 @@ async def entrypoint(ctx: JobContext):
     Remember, you are someone I trust implicitly, and your words should always reflect that depth of relationship.
     """
     # Create an initial chat context with a system prompt
-    token = GetToken("my-room")
+    token = GetToken("asj-room")
     print("PlayGround Token:", token)
     contextText = ""
     with open("llm_context.json", "r") as file:
@@ -92,12 +94,8 @@ async def entrypoint(ctx: JobContext):
     )
 
     def before_lmm_cb(assistant, chat_ctx):
-        # chat_ctx.append(
-        #     role="system",
-        #     text=(
-        #         # add additional context here
-        #     ),
-        # )
+        global chat_history
+        chat_history = [message for message in chat_ctx.messages]
         return assistant.llm.chat(
             chat_ctx=chat_ctx,
             fnc_ctx=assistant.fnc_ctx,
@@ -110,9 +108,16 @@ async def entrypoint(ctx: JobContext):
         # tts=openai.TTS(),
         tts=elevenlabs.TTS(voice=HARI_VOICE),
         chat_ctx=initial_ctx,
-        # before_llm_cb=before_lmm_cb,
+        before_llm_cb=before_lmm_cb,
+        min_endpointing_delay=3,
     )
 
+    def user_started_speaking_callback(answer_message):
+        global chat_history
+        chat_history.append(answer_message)
+        # Save here - Bobby
+
+    assistant.on("agent_speech_committed", user_started_speaking_callback)
     # Start the voice assistant with the LiveKit room
     assistant.start(ctx.room)
 
