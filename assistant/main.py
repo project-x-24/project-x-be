@@ -25,10 +25,15 @@ class Agent():
         print("Agent Type:", agentType)
         self.agentType = agentType
     async def entrypoint(self, ctx: JobContext):
+        chat_history = ''
+        try:
+            chat_history = requests.get(f"http://0.0.0.0:3000/api/context?agent={self.agentType}", headers={"Content-Type": "application/json"})
+        except Exception as error:
+            print("Couldn't get chat history", error)
         base_prompt = f"""
             base_prompts[AGENT_TYPE]
             Chat history
-            <chat history here>
+            {chat_history}
         """
         # Create an initial chat context with a system prompt
         token = GetToken("my-room")
