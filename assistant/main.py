@@ -24,7 +24,7 @@ AGENT_TYPE = os.environ.get("AGENT_TYPE")  # SELF_AGENT, THERAPIST, BEST_FRIEND
 # This function is the entrypoint for the agent.
 async def entrypoint(ctx: JobContext):
     base_prompt = f"""
-        base_prompts[AGENT_TYPE]
+        {base_prompts[AGENT_TYPE]}
         Chat history
         <chat history here>
     """
