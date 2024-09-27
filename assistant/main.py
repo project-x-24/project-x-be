@@ -22,8 +22,8 @@ class Agent():
     agentType = ''
     lastQuestion = ''
     def __init__(self, agentType: str):
-        print("Agent Type:", agentType)
         self.agentType = agentType
+    
     async def entrypoint(self, ctx: JobContext):
         chat_history = ''
         try:
@@ -31,7 +31,7 @@ class Agent():
         except Exception as error:
             print("Couldn't get chat history", error)
         base_prompt = f"""
-            base_prompts[AGENT_TYPE]
+            {base_prompts[self.agentType]}
             Chat history
             {chat_history}
         """
@@ -193,5 +193,5 @@ def GetToken(roomName: str):
 if __name__ == "__main__":
     AGENT_TYPE = os.environ.get("AGENT_TYPE") # SELF_AGENT, THERAPIST, BEST_FRIEND
     agent = Agent(AGENT_TYPE)
-    print("szd",AGENT_TYPE)
+    print("Agent Type", AGENT_TYPE)
     cli.run_app(WorkerOptions(entrypoint_fnc=agent.entrypoint))
