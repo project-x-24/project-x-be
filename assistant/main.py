@@ -85,6 +85,7 @@ class Agent():
         )
 
         def user_started_speaking_callback( answer_message):
+            self.lastQuestion = answer_message.content
             try:
                 # Regular expression pattern to capture Event Name and Date
                 pattern = r"\[(.+?)\|(.+?)\]"
@@ -113,20 +114,8 @@ class Agent():
                 print("Error in extracting Event Name and Date")
                 pass
             print("User started speaking")
-            api_url = "http://0.0.0.0:3000/api/context"
-            headers = {'Content-Type': 'application/json'}
-            data = {     
-                "agent":"self.agentType",
-                "question":self.lastQuestion,
-                "answer":answer_message.content,}
-            try:
-                response = requests.post(api_url, data=json.dumps(data), headers=headers)
-                if response.status_code == 200:
-                    print("Chat history successfully sent to the API.")
-                else:
-                    print(f"Failed to send chat history. Status code: {response.status_code}")
-            except Exception as error:
-                print("An exception occurred", error)    
+
+
             
 
             # Save here - Bobby
@@ -140,7 +129,20 @@ class Agent():
         chat = rtc.ChatManager(ctx.room)
 
         async def answer_from_text(self, txt: str):
-            self.lastQuestion = txt
+            api_url = "http://0.0.0.0:3000/api/context"
+            headers = {'Content-Type': 'application/json'}
+            data = {     
+                "agent":self.agentType,
+                "question":self.lastQuestion,
+                "answer":txt,}
+            try:
+                response = requests.post(api_url, data=json.dumps(data), headers=headers)
+                if response.status_code == 200:
+                    print("Chat history successfully sent to the API.")
+                else:
+                    print(f"Failed to send chat history. Status code: {response.status_code}")
+            except Exception as error:
+                print("An exception occurred", error)    
             chat_ctx = assistant.chat_ctx.copy()
             chat_ctx.append(role="user", text=txt)
             stream = llm_plugin.chat(chat_ctx=chat_ctx)
