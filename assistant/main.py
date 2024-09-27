@@ -47,7 +47,7 @@ async def entrypoint(ctx: JobContext):
     token = GetToken("asj-room")
     print("PlayGround Token:", token)
     contextText = ""
-    with open("llm_context.json", "r") as file:
+    with open("assistant/llm_context.json", "r") as file:
         chat_data = json.load(file)
         chat_list = chat_data.get("chat", [])
         chat = "\n".join(chat_list)

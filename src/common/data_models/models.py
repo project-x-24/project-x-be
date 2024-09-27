@@ -69,61 +69,14 @@ class BaseModel(Model):
 
 # Use this format to create data models, keeping it as comment for ref
 
-# class AiModels(BaseModel):
-#     name = CharField()
-#     display_name = CharField()
-#     model_type_id = IntegerField()
-#     model_provider_id = IntegerField()
-#     model_code = CharField()
-#     metadata = JSONField()
-#     created_at = DateTimeField()
-#     deleted_at = DateTimeField(null=True)
-#     updated_at = DateTimeField()
+class Context(BaseModel):
+    id = IntegerField()
+    agent = IntegerField()
+    question = CharField()
+    answer = CharField()
+    created_at = DateTimeField()
+    updated_at = DateTimeField()
+    deleted_at = DateTimeField(null=True)
 
-#     class Meta:
-#         table_name = "AiModels"
-
-
-# class ChatHistories(BaseModel):
-#     user_id = IntegerField()
-#     client_id = IntegerField()
-#     session_id = CharField()
-#     message = JSONField(null=True)  # json
-#     metadata = JSONField(null=True)  # json
-#     created_at = DateTimeField(constraints=[SQL("DEFAULT CURRENT_TIMESTAMP")])
-#     deleted_at = DateTimeField(null=True)
-
-#     class Meta:
-#         table_name = "ChatHistories"
-
-
-# class AssetTypes(BaseModel):
-#     name = CharField()
-#     created_at = DateTimeField(constraints=[SQL("DEFAULT CURRENT_TIMESTAMP")])
-#     updated_at = DateTimeField(constraints=[SQL("DEFAULT CURRENT_TIMESTAMP")])
-#     deleted_at = DateTimeField(null=True)
-
-#     class Meta:
-#         table_name = "AssetTypes"
-
-
-# class Assets(BaseModel):
-#     client_id = IntegerField()
-#     user_id = IntegerField()
-#     parent_id = IntegerField(null=True)
-#     file_name = CharField(null=True)
-#     language = CharField(null=True)
-#     s3_key = CharField(null=True)
-#     s3_bucket = CharField(null=True)
-#     asset_type = ForeignKeyField(column_name="asset_type_id", field="id", model=AssetTypes)
-#     metadata = JSONField(null=True)  # json
-#     created_at = DateTimeField(constraints=[SQL("DEFAULT CURRENT_TIMESTAMP")])
-#     updated_at = DateTimeField(constraints=[SQL("DEFAULT CURRENT_TIMESTAMP")])
-#     deleted_at = DateTimeField(null=True)
-
-#     class Meta:
-#         table_name = "Assets"
-#         indexes = (
-#             (("client_id", "user_id", "asset_type_id"), False),
-#             (("client_id", "user_id", "parent_id"), False),
-#         )
+    class Meta:
+        table_name = "context"
