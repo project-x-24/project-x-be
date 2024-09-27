@@ -1,0 +1,23 @@
+version: "3.8"
+
+services:
+  mysql:
+    image: mysql:9.0
+    container_name: mysql-db
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: project_x_db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./.data/mysql-data:/var/lib/mysql
+    networks:
+      - hackathon-network
+
+volumes:
+  mysql-data:
+
+networks:
+  hackathon-network:

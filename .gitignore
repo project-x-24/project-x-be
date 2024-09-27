@@ -187,3 +187,4 @@ pencil_visual_db.db
 
 bin/**/*
 data/*
+.data/*
