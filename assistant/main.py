@@ -1,4 +1,5 @@
 import asyncio
+import os
 
 from livekit.agents import AutoSubscribe, JobContext, WorkerOptions, cli, llm
 from livekit.agents.voice_assistant import VoiceAssistant
@@ -6,6 +7,7 @@ from livekit.plugins import deepgram, openai, silero, elevenlabs
 from livekit.plugins.elevenlabs import Voice, VoiceSettings
 from livekit import rtc
 from dotenv import load_dotenv
+from livekit import api
 
 load_dotenv("../.env")
 
@@ -13,6 +15,9 @@ load_dotenv("../.env")
 # This function is the entrypoint for the agent.
 async def entrypoint(ctx: JobContext):
     # Create an initial chat context with a system prompt
+    token = GetToken("my-room")
+    print("PlayGround Token:",token)
+
     initial_ctx = llm.ChatContext().append(
         role="system",
         text=(
@@ -94,6 +99,15 @@ async def entrypoint(ctx: JobContext):
 
     # Greets the user with an initial message
     await assistant.say("Hey, how can I help you today?", allow_interruptions=True)
+
+def GetToken(roomName : str):
+    apiKey = os.environ.get("LIVEKIT_API_KEY")
+    apiSecrete = os.environ.get("LIVEKIT_API_SECRET")
+    token = api.AccessToken(apiKey, apiSecrete).with_identity("identity").with_name("my name").with_grants(api.VideoGrants(
+        room_join=True,
+        room=roomName,
+    ))
+    return token.to_jwt()
 
 
 if __name__ == "__main__":
