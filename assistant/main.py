@@ -31,6 +31,7 @@ async def entrypoint(ctx: JobContext):
                     f"now pretend you are {pretendUserName}, never reply as the ai language model you are.\n"
                     f"dont talk as if you are an ai assistant instead talk as if you are human.\n"
                     f"talk humanly and naturally as possible."
+                    f"conversation between me and {pretendUserName} should be concise avoid long paragraphs."
                 )
         print("contextText:" , contextText)
     initial_ctx = llm.ChatContext().append(
