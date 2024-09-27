@@ -1,4 +1,5 @@
 import asyncio
+import json
 import os
 from typing import Optional
 
@@ -14,7 +15,7 @@ load_dotenv("../.env")
 
 
 # This function is the entrypoint for the agent.
-async def entrypoint(ctx: JobContext, context: Optional[str] = None):
+async def entrypoint(ctx: JobContext):
     base_prompt = """
     You are an AI assistant designed to engage in deeply personal and empathetic conversations.
     Your primary role is to take on the persona of someone very close to me — someone who knows me intimately and cares for me deeply.
@@ -36,18 +37,26 @@ async def entrypoint(ctx: JobContext, context: Optional[str] = None):
 
     Remember, you are someone I trust implicitly, and your words should always reflect that depth of relationship.
     """
-
-    if context:
-        base_prompt = f"{base_prompt}\n\n Use the below context to understand the conversation between user (given as You) and the person: {context}\n\n"
-
     # Create an initial chat context with a system prompt
     token = GetToken("my-room")
     print("PlayGround Token:", token)
-
-    initial_ctx = llm.ChatContext().append(
-        role="system",
-        text=(base_prompt),
-    )
+    contextText = ""
+    with open("llm_context.json", "r") as file:
+        chat_data = json.load(file)
+        chat_list = chat_data.get("chat", [])
+        chat = "\n".join(chat_list)
+        pretendUserName = chat_data.get("pretendUserName", "")
+        contextText = (
+            f"Here is a chat between a me and {pretendUserName}.\n"
+            f"{chat}\n"
+            f"end of chat.\n"
+            f"now pretend you are {pretendUserName}, never reply as the ai language model you are.\n"
+            f"dont talk as if you are an ai assistant instead talk as if you are human.\n"
+            f"talk humanly and naturally as possible."
+            f"conversation between me and {pretendUserName} should be concise avoid long paragraphs."
+        )
+        base_prompt += contextText
+    initial_ctx = llm.ChatContext().append(role="system", text=base_prompt)
 
     # Connect to the LiveKit room
     # indicating that the agent will only subscribe to audio tracks
@@ -79,12 +88,12 @@ async def entrypoint(ctx: JobContext, context: Optional[str] = None):
     )
 
     def before_lmm_cb(assistant, chat_ctx):
-        chat_ctx.append(
-            role="system",
-            text=(
-                # add additional context here
-            ),
-        )
+        # chat_ctx.append(
+        #     role="system",
+        #     text=(
+        #         # add additional context here
+        #     ),
+        # )
         return assistant.llm.chat(
             chat_ctx=chat_ctx,
             fnc_ctx=assistant.fnc_ctx,
