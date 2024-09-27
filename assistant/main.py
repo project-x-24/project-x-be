@@ -131,7 +131,7 @@ async def entrypoint(ctx: JobContext):
     await asyncio.sleep(1)
 
     # Greets the user with an initial message
-    await assistant.say("Hey, how can I help you today?", allow_interruptions=True)
+    await assistant.say("Hey, whats up?", allow_interruptions=True)
 
 
 def GetToken(roomName: str):
