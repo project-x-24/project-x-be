@@ -1,9 +1,7 @@
 import asyncio
 import json
-import argparse
 import os
 import re
-from typing import Optional
 
 from livekit.agents import AutoSubscribe, JobContext, WorkerOptions, cli, llm
 from livekit.agents.voice_assistant import VoiceAssistant
