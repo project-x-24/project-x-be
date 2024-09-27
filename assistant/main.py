@@ -18,6 +18,7 @@ async def entrypoint(ctx: JobContext):
         text=(
             "You are a voice assistant created by LiveKit. Your interface with users will be voice. "
             "You should use short and concise responses, and avoiding usage of unpronouncable punctuation."
+            "Never reply as"
         ),
     )
 
@@ -53,7 +54,7 @@ async def entrypoint(ctx: JobContext):
         chat_ctx.append(
             role="system",
             text=(
-                "Pretend you are alex, alex a good minecraft player"
+                "Generate responses in a conversational, engaging manner, using a natural, human-like tone. Ensure the model avoids overly formal or mechanical phrasing and prioritizes empathy, relatability, and a warm, friendly tone. Encourage the model to reflect the nuances of human speech, including casual phrasing, small talk, and emotional intelligence. Responses should mimic how an empathetic, thoughtful person might interact, showing understanding, providing clarity, and actively engaging in the conversation."
             ),
         )
         return assistant.llm.chat(
