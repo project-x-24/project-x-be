@@ -21,24 +21,35 @@ class Agent():
     # This function is the entrypoint for the agent.
     agentType = ''
     lastQuestion = ''
+    base_prompt = ''
     def __init__(self, agentType: str):
         self.agentType = agentType
-    
-    async def entrypoint(self, ctx: JobContext):
-        chat_history = ''
+        
         try:
-            chat_history = requests.get(f"http://0.0.0.0:3000/api/context?agent={self.agentType}", headers={"Content-Type": "application/json"})
+            response = requests.get("http://0.0.0.0:3000/api/context?agent={self.agentType}",headers={"Content-Type": "application/json"})
+            resp= response.json() 
+            olderChats = []
+            for item in resp["items"]:
+                # data = { "agent": item["agent"], "question": item["question"], "answer": item["answer"] }
+                olderChats.append(f"""{item["agent"]}: {item["question"]}""")
+                olderChats.append(f"""self: {item["answer"]}""")
+                self.base_prompt = f"""
+                    {base_prompts[self.agentType]}
+                    previous chat history begins\n
+                    {olderChats}
+                    previous chat history ends\n                
+                """
         except Exception as error:
-            print("Couldn't get chat history", error)
-        base_prompt = f"""
-            {base_prompts[self.agentType]}
-            Chat history
-            {chat_history}
-        """
-        # Create an initial chat context with a system prompt
+            print("An exception occurred, running base prompt without history", error)
+            self.base_prompt = f"""
+                {base_prompts[self.agentType]}            
+            """
         token = GetToken("my-room")
         print("PlayGround Token:", token)
-        initial_ctx = llm.ChatContext().append(role="system", text=base_prompt)
+    async def entrypoint(self, ctx: JobContext):      
+        # Create an initial chat context with a system prompt
+
+        initial_ctx = llm.ChatContext().append(role="system", text=self.base_prompt)
 
         # Connect to the LiveKit room
         # indicating that the agent will only subscribe to audio tracks
