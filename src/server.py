@@ -20,7 +20,7 @@ def create_app(test_mode=False):
                 DBConnectionMiddleware(),
                 # JWTMiddleware(JWT_SECRET),
                 # Marshmallow(),
-                falcon.CORSMiddleware(allow_origins="trypencil.com", allow_credentials="*"),
+                falcon.CORSMiddleware(allow_origins="*", allow_credentials="*"),
             ]
         )
     else:
