@@ -48,12 +48,10 @@ async def entrypoint(ctx: JobContext):
         pretendUserName = chat_data.get("pretendUserName", "")
         contextText = (
             f"Here is a chat between a me and {pretendUserName}.\n"
-            f"{chat}\n"
-            f"end of chat.\n"
-            f"now pretend you are {pretendUserName}, never reply as the ai language model you are.\n"
-            f"dont talk as if you are an ai assistant instead talk as if you are human.\n"
-            f"talk humanly and naturally as possible."
-            f"conversation between me and {pretendUserName} should be concise avoid long paragraphs."
+            f"Chat: {chat}\n"
+            f"---- END OF CHAT ------\n"
+            f"Pretend you are {pretendUserName},\n"
+            f"Conversation should be concise avoid long paragraphs."
         )
         base_prompt += contextText
     initial_ctx = llm.ChatContext().append(role="system", text=base_prompt)
