@@ -71,6 +71,7 @@ class BaseModel(Model):
 
 class Context(BaseModel):
     id = IntegerField()
+    name = CharField()
     agent = IntegerField()
     question = CharField()
     answer = CharField()

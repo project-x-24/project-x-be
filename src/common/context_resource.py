@@ -9,11 +9,12 @@ class ContextResource(object):
         try:
             # Parse the JSON body
             body = req.media
+            name = body.get("name")
             agent = body.get("agent")
             question = body.get("question")
             answer = body.get("answer")
 
-            context = Context.create(agent=agent, question=question, answer=answer)
+            context = Context.create(name=name, agent=agent, question=question, answer=answer)
             context.save()
 
             # Respond with a success message
@@ -34,13 +35,13 @@ class ContextResource(object):
                 # Fetch entries with the specified agent
                 entries = list(
                     Context.select(
-                        Context.agent, Context.question, Context.answer
+                        Context.name, Context.agent, Context.question, Context.answer
                     ).where(Context.agent == agent)
                 )
             else:
                 # Fetch all entries
                 entries = list(
-                    Context.select(Context.agent, Context.question, Context.answer)
+                    Context.select(Context.name, Context.agent, Context.question, Context.answer)
                 )
 
             resp.status = falcon.HTTP_200
