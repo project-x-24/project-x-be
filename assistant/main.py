@@ -66,6 +66,13 @@ class Agent():
                 use_speaker_boost=True,
             ),
         )
+        
+        KURIAN_VOICE = Voice(
+            id="aWHwsR3lAJpw5qdEam15",
+            name="Kurian",
+            category="premade",
+        )
+
 
         def before_lmm_cb(assistant, chat_ctx):
             return assistant.llm.chat(
@@ -78,7 +85,7 @@ class Agent():
             stt=deepgram.STT(),
             llm=openai.LLM(),
             # tts=openai.TTS(),
-            tts=elevenlabs.TTS(voice=HARI_VOICE),
+            tts=elevenlabs.TTS(voice=KURIAN_VOICE),
             chat_ctx=initial_ctx,
             before_llm_cb=before_lmm_cb,
             min_endpointing_delay=3,
