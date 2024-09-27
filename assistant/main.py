@@ -152,8 +152,22 @@ class Agent:
         )
 
         def user_started_speaking_callback(answer_message):
-            self.answer_from_text(answer_message)
             self.lastQuestion = answer_message.content
+            api_url = "http://0.0.0.0:3000/api/context"
+            headers = {'Content-Type': 'application/json'}
+            data = {     
+                "agent":self.agentType,
+                "question":self.lastQuestion
+            }
+            try:
+                response = requests.post(api_url, data=json.dumps(data), headers=headers)
+                if response.status_code == 200:
+                    print("Chat history successfully sent to the API.")
+                else:
+                    print(f"Failed to send chat history. Status code: {response.status_code}")
+            except Exception as e:
+                print("Error in extracting Event Name and Date")
+
             try:
                 # Regular expression pattern to capture Event Name and Date
                 pattern = r"\[(.+?)\|(.+?)\]"
