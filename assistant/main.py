@@ -1,6 +1,7 @@
 import asyncio
 import json
 import os
+import re
 from typing import Optional
 
 from livekit.agents import AutoSubscribe, JobContext, WorkerOptions, cli, llm
@@ -41,6 +42,10 @@ async def entrypoint(ctx: JobContext):
     9. Add some emotional fillers: Use phrases like "I understand," "I'm here for you," "I care about you," "I love you," "I'm proud of you," "Hmm...", "Ah...", "Umm..." etc., to reinforce the emotional connection.
     10. Indian Context: If the conversation involves cultural references or Indian context, adapt your responses to reflect that cultural understanding.
     11. Indian English: Use Indian English phrases and idioms where appropriate to make the conversation more relatable and authentic.
+    12. Meeting or To Do Assistant: If the user is talking about a meeting or an event that he wishes to attend or some 'to-do', Please ask him to share the details of the event. 
+        So that we can add it to the calendar. Finally ask the user like 'Do you want me to add this to your To Do list?'.
+        If yes, then generate a response in this given format only: 'I have added this to your To Do list. [<Event Name>|<Date]>.'
+        If No, then generate a response like 'Okay, I will not add this to your To Do list.'
     Remember, you are someone I trust implicitly, and your words should always reflect that depth of relationship.
     """
     # Create an initial chat context with a system prompt
@@ -115,7 +120,24 @@ async def entrypoint(ctx: JobContext):
     def user_started_speaking_callback(answer_message):
         global chat_history
         chat_history.append(answer_message)
-        # Save here - Bobby
+        try:
+            # Regular expression pattern to capture Event Name and Date
+            pattern = r"\[(.+?)\|(.+?)\]"
+
+            # Using re.search to find matches
+            match = re.search(pattern, answer_message.content)
+
+            if match:
+                event_name = match.group(1)  # First captured group is the event name
+                date = match.group(2)  # Second captured group is the date
+                print(f"Event Name: {event_name}")
+                print(f"Date: {date}")
+            else:
+                print("No match found.")
+        except Exception as e:
+            print("Error in extracting Event Name and Date")
+            pass
+        # # Save here - Bobby
 
     assistant.on("agent_speech_committed", user_started_speaking_callback)
     # Start the voice assistant with the LiveKit room
