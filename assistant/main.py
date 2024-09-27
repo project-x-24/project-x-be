@@ -191,7 +191,7 @@ def GetToken(roomName: str):
 
 
 if __name__ == "__main__":
-    AGENT_TYPE = os.environ.get("AGENT_TYPE") # SELF_AGENT, THERAPIST, BEST_FRIEND
+    AGENT_TYPE = os.environ.get("AGENT_TYPE") # SELF_AGENT, THERAPIST, BEST_FRIEND, GAME_AGENT
     agent = Agent(AGENT_TYPE)
     print("Agent Type", AGENT_TYPE)
     cli.run_app(WorkerOptions(entrypoint_fnc=agent.entrypoint))
