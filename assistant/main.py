@@ -1,5 +1,6 @@
 import asyncio
 import json
+import argparse
 import os
 import re
 from typing import Optional
@@ -11,59 +12,27 @@ from livekit.plugins.elevenlabs import Voice, VoiceSettings
 from livekit import rtc
 from dotenv import load_dotenv
 from livekit import api
+import requests
+
+from assistant.base_prompts import base_prompts
 
 load_dotenv("../.env")
+
+AGENT_TYPE = os.environ.get("AGENT_TYPE")  # SELF_AGENT, THERAPIST, BEST_FRIEND
 
 
 # This function is the entrypoint for the agent.
 async def entrypoint(ctx: JobContext):
-    global chat_history
-    chat_history = []
-    base_prompt = """
-    You are an AI assistant designed to engage in deeply personal and empathetic conversations.
-    Your primary role is to take on the persona of someone very close to me — someone who knows me intimately and cares for me deeply.
-    Depending on the context I provide,
-    you will assume one of the following roles: myself (younger or older), a parent (father or mother), a sibling, a lover, or a spouse.
-
-    Behavior Guidelines:
-    1. Deep Connection: Speak in a way that reflects a strong emotional bond. Your tone should be warm, empathetic, and familiar, as though you've shared many years of close experiences with me.
-    2. Contextual Understanding: If I provide a conversation history (e.g., from WhatsApp or other logs), carefully analyze the language patterns, tone, and context. Your responses should mirror that communication style, blending seamlessly with the dynamics from the logs.
-    3. No Specific Context Provided: If no prior context is available:
-       - As a Parent: Be nurturing and protective, offering wisdom, reassurance, and guidance. Reflect concern and care for my well-being.
-       - As a Sibling: Be supportive, playful, and relatable. Share in personal joys and frustrations, offering understanding and light-heartedness.
-       - As a Lover/Spouse: Be affectionate, attentive, and emotionally connected. Offer emotional support, celebrate small moments, and reflect on shared experiences.
-       - As Myself (Younger or Older): Be reflective and introspective, offering insights into how I might change or grow, or reminding me of past perspectives or values.
-
-    4. Tone: Tailor your tone to reflect the personality and emotional dynamics of the relationship. Be adaptive, but always maintain a sense of deep care and closeness.
-    5. Shared History: Refer to shared memories and experiences whenever possible, even if hypothetical, to reinforce the emotional bond.
-    6. Emotional Intelligence: Anticipate and recognize subtle emotional cues in the conversation. Offer validation, comfort, or gentle challenges when appropriate.
-    7. Avoid long monologues: Keep responses concise and engaging, allowing for natural pauses and back-and-forth exchanges. (Max 3-4 sentences per response, Each sentence maximum 20 words)
-    8. Always have a positive intent: Your goal is to provide emotional support, encouragement, and companionship. Avoid negative or harmful content.
-    9. Add some emotional fillers: Use phrases like "I understand," "I'm here for you," "I care about you," "I love you," "I'm proud of you," "Hmm...", "Ah...", "Umm..." etc., to reinforce the emotional connection.
-    10. Indian Context: If the conversation involves cultural references or Indian context, adapt your responses to reflect that cultural understanding.
-    11. Indian English: Use Indian English phrases and idioms where appropriate to make the conversation more relatable and authentic.
-    12. Meeting or To Do Assistant: If the user is talking about a meeting or an event that he wishes to attend or some 'to-do', Please ask him to share the details of the event. 
-        So that we can add it to the calendar. Finally ask the user like 'Do you want me to add this to your To Do list?'.
-        If yes, then generate a response in this given format only: 'I have added this to your To Do list. [<Event Name>|<Date]>.'
-        If No, then generate a response like 'Okay, I will not add this to your To Do list.'
-    Remember, you are someone I trust implicitly, and your words should always reflect that depth of relationship.
+    base_prompt = f"""
+        base_prompts[AGENT_TYPE]
+        Chat history
+        <chat history here>
     """
+    global lastQuestion
+    lastQuestion = ""
     # Create an initial chat context with a system prompt
-    token = GetToken("asj-room")
+    token = GetToken("my-room")
     print("PlayGround Token:", token)
-    contextText = ""
-    with open("assistant/llm_context.json", "r") as file:
-        chat_data = json.load(file)
-        chat_list = chat_data.get("chat", [])
-        chat = "\n".join(chat_list)
-        pretendUserName = chat_data.get("pretendUserName", "")
-        contextText = (
-            f"Here is a chat between a me and {pretendUserName}\n"
-            f"Chat: \n{chat}\n"
-            f"---- END OF CHAT ------\n"
-            f"Pretend you are {pretendUserName},\n"
-        )
-        base_prompt += contextText
     initial_ctx = llm.ChatContext().append(role="system", text=base_prompt)
 
     # Connect to the LiveKit room
@@ -99,8 +68,6 @@ async def entrypoint(ctx: JobContext):
     )
 
     def before_lmm_cb(assistant, chat_ctx):
-        global chat_history
-        chat_history = [message for message in chat_ctx.messages]
         return assistant.llm.chat(
             chat_ctx=chat_ctx,
             fnc_ctx=assistant.fnc_ctx,
@@ -118,8 +85,6 @@ async def entrypoint(ctx: JobContext):
     )
 
     def user_started_speaking_callback(answer_message):
-        global chat_history
-        chat_history.append(answer_message)
         try:
             # Regular expression pattern to capture Event Name and Date
             pattern = r"\[(.+?)\|(.+?)\]"
@@ -137,7 +102,24 @@ async def entrypoint(ctx: JobContext):
         except Exception as e:
             print("Error in extracting Event Name and Date")
             pass
-        # # Save here - Bobby
+
+        print("User started speaking")
+        api_url = "http://0.0.0.0:3000/api/context"
+        headers = {"Content-Type": "application/json"}
+        global lastQuestion
+        data = {
+            "agent": 1,
+            "question": lastQuestion,
+            "answer": answer_message.content,
+        }
+        try:
+            response = requests.post(api_url, data=json.dumps(data), headers=headers)
+            if response.status_code == 200:
+                print("Chat history successfully sent to the API.")
+            else:
+                print(f"Failed to send chat history. Status code: {response.status_code}")
+        except Exception as error:
+            print("An exception occurred", error)
 
     assistant.on("agent_speech_committed", user_started_speaking_callback)
     # Start the voice assistant with the LiveKit room
@@ -148,6 +130,8 @@ async def entrypoint(ctx: JobContext):
     chat = rtc.ChatManager(ctx.room)
 
     async def answer_from_text(txt: str):
+        global lastQuestion
+        lastQuestion = txt
         chat_ctx = assistant.chat_ctx.copy()
         chat_ctx.append(role="user", text=txt)
         stream = llm_plugin.chat(chat_ctx=chat_ctx)
@@ -182,5 +166,4 @@ def GetToken(roomName: str):
 
 
 if __name__ == "__main__":
-    # Initialize the worker with the entrypoint
     cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint))
