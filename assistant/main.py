@@ -1,4 +1,5 @@
 import asyncio
+import json
 import os
 
 from livekit.agents import AutoSubscribe, JobContext, WorkerOptions, cli, llm
@@ -17,19 +18,26 @@ async def entrypoint(ctx: JobContext):
     # Create an initial chat context with a system prompt
     token = GetToken("my-room")
     print("PlayGround Token:",token)
-
+    contextText = ""
+    with open('llm_context.json', 'r') as file:
+        chat_data = json.load(file)
+        chat_list = chat_data.get("chat", [])
+        chat = "\n".join(chat_list)
+        pretendUserName = chat_data.get("pretendUserName", "")
+        contextText=(
+                    f"Here is a chat between a me and {pretendUserName}.\n"
+                    f"{chat}\n"
+                    f"end of chat.\n"
+                    f"now pretend you are {pretendUserName}, never reply as the ai language model you are.\n"
+                    f"dont talk as if you are an ai assistant instead talk as if you are human.\n"
+                    f"talk humanly and naturally as possible."
+                )
+        print("contextText:" , contextText)
     initial_ctx = llm.ChatContext().append(
         role="system",
-        text=(
-            "You are a voice assistant created by LiveKit. Your interface with users will be voice. "
-            "You should use short and concise responses, and avoiding usage of unpronouncable punctuation."
-            "Generate responses in a conversational, engaging manner, using a natural, human-like tone"
-            "Avoid the use of bullet points, numbered lists, or overly structured formats, instead the replies should flow naturally, like human conversation, using full sentences and paragraphs."
-            "Ensure the model avoids overly formal or mechanical phrasing and prioritizes empathy, relatability, and a warm, friendly tone." 
-            "Encourage the model to reflect the nuances of human speech, including casual phrasing, small talk, and emotional intelligence." 
-            "Responses should mimic how an empathetic, thoughtful person might interact, showing understanding, providing clarity, and actively engaging in the conversation."
-        ),
+        text=contextText
     )
+    
 
     # Connect to the LiveKit room
     # indicating that the agent will only subscribe to audio tracks
@@ -60,12 +68,12 @@ async def entrypoint(ctx: JobContext):
     )
 
     def before_lmm_cb(assistant, chat_ctx):
-        chat_ctx.append(
-            role="system",
-            text=(
-                # add additional context here
-            ),
-        )
+        # chat_ctx.append(
+        #     role="system",
+        #     text=(
+        #         # add additional context here
+        #     ),
+        # )
         return assistant.llm.chat(
             chat_ctx=chat_ctx,
             fnc_ctx=assistant.fnc_ctx,
