@@ -15,7 +15,7 @@ import requests
 from assistant.base_prompts import base_prompts
 
 load_dotenv("../.env")
-
+SERVER_HOST = os.environ.get('SERVER_HOST', 'http://localhost:3000')
 
 class Agent:
     # This function is the entrypoint for the agent.
@@ -32,7 +32,7 @@ class Agent:
 
         try:
             response = requests.get(
-                f"http://localhost:3000/api/context?agent={self.agentType}",
+                f"{SERVER_HOST}/api/context?agent={self.agentType}",
                 headers={"Content-Type": "application/json"},
             )
             resp = response.json()
@@ -153,7 +153,7 @@ class Agent:
 
         def user_started_speaking_callback(answer_message):
             self.lastQuestion = answer_message.content
-            api_url = "http://0.0.0.0:3000/api/context"
+            api_url = f"{SERVER_HOST}/api/context"
             headers = {'Content-Type': 'application/json'}
             data = {     
                 "agent":self.agentType,
@@ -184,7 +184,7 @@ class Agent:
                     try:
                         data = {"event": event_name, "date": date}
                         response = requests.post(
-                            "http://0.0.0.0:3000/api/todo",
+                            f"{SERVER_HOST}/api/todo",
                             data=json.dumps(data),
                             headers={"Content-Type": "application/json"},
                         )
@@ -212,7 +212,7 @@ class Agent:
         chat = rtc.ChatManager(ctx.room)
 
         async def answer_from_text(self, txt: str):
-            api_url = "http://0.0.0.0:3000/api/context"
+            api_url = f"{SERVER_HOST}/api/context"
             headers = {'Content-Type': 'application/json'}
             data = {     
                 "agent":self.agentType,
