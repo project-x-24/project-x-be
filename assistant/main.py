@@ -47,7 +47,7 @@ async def entrypoint(ctx: JobContext):
         chat = "\n".join(chat_list)
         pretendUserName = chat_data.get("pretendUserName", "")
         contextText = (
-            f"Here is a chat between a me and {pretendUserName}.\n"
+            f"Here is a chat between a me and {pretendUserName}\n"
             f"Chat: {chat}\n"
             f"---- END OF CHAT ------\n"
             f"Pretend you are {pretendUserName},\n"
