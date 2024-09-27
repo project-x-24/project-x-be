@@ -4,7 +4,7 @@ import os
 import re
 
 from livekit.agents import AutoSubscribe, JobContext, WorkerOptions, cli, llm
-from livekit.agents.voice_assistant import VoiceAssistant
+from livekit.agents.voice_assistant import VoiceAssistant, AssistantTranscriptionOptions
 from livekit.plugins import deepgram, openai, silero, elevenlabs
 from livekit.plugins.elevenlabs import Voice, VoiceSettings
 from livekit import rtc
@@ -18,7 +18,7 @@ load_dotenv("../.env")
 
 
 class Agent():
-# This function is the entrypoint for the agent.
+    # This function is the entrypoint for the agent.
     agentType = ''
     lastQuestion = ''
     def __init__(self, agentType: str):
@@ -71,19 +71,23 @@ class Agent():
                 use_speaker_boost=True,
             ),
         )
-        
+
         KURIAN_VOICE = Voice(
             id="aWHwsR3lAJpw5qdEam15",
             name="Kurian",
             category="premade",
         )
 
-
         def before_lmm_cb(assistant, chat_ctx):
             return assistant.llm.chat(
                 chat_ctx=chat_ctx,
                 fnc_ctx=assistant.fnc_ctx,
             )
+
+        transcriptionOptions = AssistantTranscriptionOptions(
+            user_transcription=True,
+            agent_transcription=True,
+        )
 
         assistant = VoiceAssistant(
             vad=silero.VAD.load(),
@@ -94,6 +98,7 @@ class Agent():
             chat_ctx=initial_ctx,
             before_llm_cb=before_lmm_cb,
             min_endpointing_delay=3,
+            transcription=transcriptionOptions,
         )
 
         def user_started_speaking_callback( answer_message):
@@ -126,9 +131,6 @@ class Agent():
                 print("Error in extracting Event Name and Date")
                 pass
             print("User started speaking")
-
-
-            
 
             # Save here - Bobby
 
