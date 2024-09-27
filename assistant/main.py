@@ -83,9 +83,12 @@ async def entrypoint(ctx: JobContext):
         id="ZJpPHx76HGgYYHKJJD0d",
         name="Hari",
         category="premade",
-        # settings=VoiceSettings(
-        #     stability=0.71, similarity_boost=0.5, style=0.0, use_speaker_boost=True
-        # ),
+        settings=VoiceSettings(
+            stability=0.10,
+            similarity_boost=0.65,
+            style=0.0,
+            use_speaker_boost=True,
+        ),
     )
 
     def before_lmm_cb(assistant, chat_ctx):
