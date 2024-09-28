@@ -27,6 +27,7 @@ class Agent:
         self.question = None
         self.chat_history = []
         self.agentType = agentType
+        self.text_event_triggered = False
         self.delay = 0.5
         if self.agentType == "ASSISTANT_AGENT":
             self.delay = 5.0
@@ -41,8 +42,8 @@ class Agent:
             olderChats = []
             for item in resp["items"]:
                 # data = { "agent": item["agent"], "question": item["question"], "answer": item["answer"] }
-                olderChats.append(f"""{item["agent"]}: {item["question"]}""")
-                olderChats.append(f"""self: {item["answer"]}""")
+                olderChats.append(f"""self: {item["question"]}""")
+                olderChats.append(f"""{item["agent"]}: {item["answer"]}""")
                 self.base_prompt = f"""
                     {base_prompts[self.agentType]}
                     previous chat history begins\n
@@ -155,17 +156,7 @@ class Agent:
             transcription=transcriptionOptions,
         )
 
-        def user_started_speaking_callback(answer_message):
-            if self.question is None:
-                if len(self.chat_history) > 0:
-                    self.question = self.chat_history[-1].content
-            answer = answer_message.content
-            data = {
-                "agent": self.agentType,
-                "question": self.question,
-                "answer": answer,
-            }
-            print("Data in user started speech event: ", data)
+        def push_chat_history_context(data):
             api_url = "http://0.0.0.0:3000/api/context"
             headers = {"Content-Type": "application/json"}
             try:
@@ -176,6 +167,25 @@ class Agent:
                     print(f"Failed to send chat history. Status code: {response.status_code}")
             except Exception as e:
                 print(f"Error in calling chat history API, Error: {e}")
+                return
+
+        def user_started_speaking_callback(answer_message):
+            if self.text_event_triggered == True:
+                print("Skipping context push from speech callback, as this is done on a text event.")
+                self.text_event_triggered = False
+            else:
+                for message in reversed(assistant.chat_ctx.messages):
+                    if message.role == "user":
+                        self.question = message.content
+                        break
+                answer = answer_message.content
+                data = {
+                    "agent": self.agentType,
+                    "question": self.question,
+                    "answer": answer,
+                }
+                print("Data in user started speech event: ", data)
+                push_chat_history_context(data)
 
             try:
                 # Regular expression pattern to capture Event Name and Date
@@ -209,8 +219,7 @@ class Agent:
                 print("Error in extracting Event Name and Date")
                 pass
             print("User started speaking")
-
-            # Save here - Bobby
+            return
 
         assistant.on("agent_speech_committed", user_started_speaking_callback)
         # Start the voice assistant with the LiveKit room
@@ -220,17 +229,42 @@ class Agent:
         # answer incoming messages from Chat
         chat = rtc.ChatManager(ctx.room)
 
-        async def answer_from_text(self, txt: str):
-            self.question = txt
+        async def get_full_response_from_llm_stream(llm_stream) -> str:
+            """
+            This function consumes the LLMStream and accumulates its content into a full response text.
+            """
+            full_text = ""
+            try:
+                # Iterate through the LLMStream asynchronously
+                async for chat_chunk in llm_stream:
+                    # Extract content from the chat_chunk (assuming it contains text in delta.content)
+                    for choice in chat_chunk.choices:
+                        if choice.delta.content:
+                            full_text += choice.delta.content
+            except Exception as e:
+                print("Error in get_full_response_from_llm_stream", e)
+            finally:
+                return full_text
+
+        async def answer_from_text(txt: str):
+            self.text_event_triggered = True
             chat_ctx = assistant.chat_ctx.copy()
             chat_ctx.append(role="user", text=txt)
             stream = llm_plugin.chat(chat_ctx=chat_ctx)
-            await assistant.say(stream)
+            answer_text = await get_full_response_from_llm_stream(stream)
+            await assistant.say(answer_text)
+            data = {
+                "agent": self.agentType,
+                "question": txt,
+                "answer": answer_text,
+            }
+            print("Data in text event: ", data)
+            push_chat_history_context(data)
 
         @chat.on("message_received")
         def on_chat_received(msg: rtc.ChatMessage):
             if msg.message:
-                asyncio.create_task(answer_from_text(self, msg.message))
+                asyncio.create_task(answer_from_text(msg.message))
 
         await asyncio.sleep(1)
 
