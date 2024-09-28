@@ -15,6 +15,7 @@ import requests
 from assistant.base_prompts import base_prompts
 
 load_dotenv("../.env")
+SERVER_HOST = os.environ.get("SERVER_HOST", "http://localhost:3000")
 
 
 class Agent:
@@ -35,7 +36,7 @@ class Agent:
 
         try:
             response = requests.get(
-                f"http://localhost:3000/api/context?agent={self.agentType}",
+                f"{SERVER_HOST}/api/context?agent={self.agentType}",
                 headers={"Content-Type": "application/json"},
             )
             resp = response.json()
@@ -58,7 +59,6 @@ class Agent:
 
         print("BASE PROMPT", self.base_prompt)
         token = GetToken("asj-room")
-        print("PlayGround Token:", token)
 
     def __resolve_voice(self):
         if self.agentType == "SELF_AGENT":
@@ -203,7 +203,7 @@ class Agent:
                     try:
                         data = {"event": event_name, "date": date}
                         response = requests.post(
-                            "http://0.0.0.0:3000/api/todo",
+                            f"{SERVER_HOST}/api/todo",
                             data=json.dumps(data),
                             headers={"Content-Type": "application/json"},
                         )
@@ -286,11 +286,17 @@ def GetToken(roomName: str):
             )
         )
     )
-    return token.to_jwt()
+    URL = os.environ.get("LIVEKIT_URL")
+    token = token.to_jwt()
+    print("******************")
+    print("PlayGround Token:", token)
+    print("URL:", URL)
+    print("******************")
+    return token
 
 
 if __name__ == "__main__":
     AGENT_TYPE = os.environ.get("AGENT_TYPE")  # SELF_AGENT, THERAPIST, BEST_FRIEND, GAME_AGENT, ASSISTANT_AGENT
-    agent = Agent(AGENT_TYPE)
     print("Agent Type", AGENT_TYPE)
+    agent = Agent(AGENT_TYPE)
     cli.run_app(WorkerOptions(entrypoint_fnc=agent.entrypoint))
